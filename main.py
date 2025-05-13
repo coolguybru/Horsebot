@@ -6,18 +6,25 @@ import os
 from flask import Flask
 from threading import Thread
 
+# Setup environment variables
 TOKEN = os.getenv("TOKEN")
 TENOR_API_KEY = os.getenv("TENOR_API_KEY")
 
+# Setup Flask web server to respond to UptimeRobot ping
 app = Flask(__name__)
+
 @app.route('/')
 def home():
     return "Bot is running!"
+
+# Start Flask web server in a separate thread
 def run():
     app.run(host='0.0.0.0', port=8080)
+
 def keep_alive():
     Thread(target=run).start()
 
+# Setup Discord bot
 class MyClient(discord.Client):
     def __init__(self):
         super().__init__(intents=discord.Intents.default())
@@ -32,6 +39,7 @@ client = MyClient()
 async def on_ready():
     print(f'Logged in as {client.user}!')
 
+# Command for horse GIF
 @client.tree.command(name="horse", description="Sends a random horse GIF 🐴")
 async def horse(interaction: discord.Interaction):
     async with aiohttp.ClientSession() as session:
@@ -47,5 +55,8 @@ async def horse(interaction: discord.Interaction):
             gif_url = random.choice(results)["media_formats"]["gif"]["url"]
             await interaction.response.send_message(gif_url)
 
+# Run the Flask server in the background
 keep_alive()
+
+# Start the Discord bot
 client.run(TOKEN)
